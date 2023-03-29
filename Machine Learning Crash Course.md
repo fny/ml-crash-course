@@ -5,7 +5,7 @@
 ## 0 Before We Begin
 
 - This guide aims to be a quick, conversational, yet mathematical guide to machine learning and neural networks.
-- *This is a draft. Please send me corrections and comments! Let me know if you get lost or confused anywhere!* 
+- *This is a draft. Please send me corrections and comments! Let me know if you get lost or confused anywhere!*
 - Prerequisites are basic linear algebra (vector and matrix multiplication) and multivariate calculus (gradients).
 - This guide involves cats because the internet. In addition, it involves birds because cats. Unfortunately, the cats disappear half-way through since I didn't have time to develop all the examples.
 - Since this is foremost a machine learning guide, I will primarily use the symbols and jargon used by the machine learning community. Statisticians have their jargon for these concepts, and I've provided them in another table.
@@ -47,7 +47,7 @@ Of the three, reinforcement learning is by far the most different. In the litera
 
 In this guide, we'll focus on *supervised learning*: particularly *classification* which aims to map an input to a categorical output and *regression* which aims to map an input to a numerical value.
 
-Quick! Back to Fluffy! (I think I heard another bird die...) With just the images, we can't do much since classification, a supervised learning problem, requires labeled data. You need to label all your images true or false corresponding to whether she's approaching with a dead bird. In symbols, we now have a data set $D = \{ (\mathbf{M}_i, y) \}_{i=1..n} \subset \mathbb{R}^{r \times g \times b}  \times \{1, 0\}$ where $\mathbf{M}_i$ is a tensor (in this case a 3D matrix) that corresponds to the RGB image pixels and $y$ corresponds to dead bird status. To simplify the problem, we might transform the input into vectors $\mathbf{x}_i$ that represent the number of red pixels in a given row of the image. 
+Quick! Back to Fluffy! (I think I heard another bird die...) With just the images, we can't do much since classification, a supervised learning problem, requires labeled data. You need to label all your images true or false corresponding to whether she's approaching with a dead bird. In symbols, we now have a data set $D = \{ (\mathbf{M}_i, y) \}_{i=1..n} \subset \mathbb{R}^{r \times g \times b}  \times \{1, 0\}$ where $\mathbf{M}_i$ is a tensor (in this case a 3D matrix) that corresponds to the RGB image pixels and $y$ corresponds to dead bird status. To simplify the problem, we might transform the input into vectors $\mathbf{x}_i$ that represent the number of red pixels in a given row of the image.
 
 Armed with your pixel counts and labels, you now need to search a hypothesis space of functions $\mathcal{H} : X \mapsto Y$ for some specific function $h \in \mathcal{H}$ that best predicts whether Fluffy has kill. $\mathcal{H}$ could be the set of all polynomial-based logistic regression classifiers or something fancier. Now you just need some procedure, which given your data and a hypothesis space, returns the best predictor $h(\mathbf{x})$.
 
@@ -60,7 +60,7 @@ Okay! That was a lot, and frankly very abstract. Fear not though, we're going to
 
 - Machine learning aims to learn a predictive function from data.
 - These functions are found by searching through a hypothesis space $\mathcal{H}$ for a function $h_T$ using a training set.
-- The goal is to find an $h$ that predicts unseen data points well, that is it minimizes the average over some scalar-valued loss function $\ell(y_i, h_T(\mathbf{x}_i))$ 
+- The goal is to find an $h$ that predicts unseen data points well, that is it minimizes the average over some scalar-valued loss function $\ell(y_i, h_T(\mathbf{x}_i))$
 
 ### 1.2 Linear Regression
 
@@ -115,15 +115,20 @@ One final note: it's also useful to normalize the data or at least mean center i
 ### 1.4 Regressing Back to Regression
 
 Armed with that knowledge, we can take our linear model
+
 $$
 \hat{y} = h(\mathbf{x}) = \mathbf{w}^T\mathbf{x} + b = w_1 x_1 + w_2 x_2 + ... + w_n x_n + b
 $$
+
 and put it in our loss function.
+
 $$
 L(\mathbf{w}, b) = L(\mathbf{v}) = \frac{1}{N}\sum_{i=1}^N \ell_{\mathbf{v}}(y_i,h(\mathbf{x}_i)) =
 \frac{1}{n} \sum_{i=1}^{N}\left(y_i - (w_1x_1 + ... + w_n x_n + b)\right)^2
 $$
+
 This is a convex function, which means we can minimize it using gradient descent! Don't believe me? Just check that the Hessian is positive semidefinite, a requirement for convexity. Now we can compute the expression for the gradient[^3]:
+
 $$
 \nabla L = \begin{bmatrix}
 
@@ -132,7 +137,7 @@ $$
 \vdots \\
 { \partial L \over \partial w_n }\\
 { \partial L \over \partial b }\\
-\end{bmatrix} = 
+\end{bmatrix} =
 \frac{1}{n} \sum_{i=1}^{N}
 \begin{bmatrix}
 2\left(y_i - (w_1x_1 + ... + w_n x_n + b)\right)(-x_1) \\
@@ -161,33 +166,33 @@ def linreg(x, y, alpha=1e-4, max_iters=500):
     alpha - the learning rate
     max_iters - the maximum number of iterations
     """
-    
+
     n, w, b, iters = len(x), 0, 0, 0
-    
+
     # Mean center the data
     xbar, ybar = np.mean(x), np.mean(y)
     xc, yc = x - xbar, y - ybar
-    
-    while iters < max_iters:        
+
+    while iters < max_iters:
         # Update the weights and biases
         errors = yc - w*xc - b
         w = w - alpha * (-2/n) * sum(xc*errors)
         b = b - alpha * (-2/n) * sum(errors)
-        
+
     print(f"Parameters found after {iters} iterations:")
     print(f"w={w} b={b - w*xbar + ybar}")
 ```
 
-Below is a plot of the algorithm above converging on the line of best fit for the data set. 
+Below is a plot of the algorithm above converging on the line of best fit for the data set.
 
 <img src="images/appetite.png" alt="appetite" style="zoom:72%;" />
 
 `Parameters found after 268 iterations with learning rate of 0.0001 a tolerance of 0.0001:
-w=-0.7894878652069325 b=68.92751390453444` 
+w=-0.7894878652069325 b=68.92751390453444`
 
 ### 1.6 Classifying Kitties
 
-Now back to our first task: catching Fluffy with kill. Say we're using the number of red pixels to classify the image, what family of functions should we consider for our hypothesis space? How do we think about our loss function? 
+Now back to our first task: catching Fluffy with kill. Say we're using the number of red pixels to classify the image, what family of functions should we consider for our hypothesis space? How do we think about our loss function?
 
 <img src="images/pixels_scatter.png" alt="pixels_scatter" style="zoom:72%;" />
 
@@ -204,16 +209,19 @@ The $\sigma$ we found is called *logistic function*. It's an example of a *score
 Now for a very important aside... ***Just because some value is restricted between zero and one does not mean that it's a probability.***  I cannot emphasize that enough, and I'll be sure to rant about it again later.
 
 Now we consider the loss function. Our $y$ values are 0 and 1 corresponding to whether Fluffy has a bird. Currently, $\hat y$ is a predicted probability, but we can easily turn that into 0 or 1 by using some cut off (e.g. 0.5 and below is 0 else 1). For the loss then, we could use the zero-one loss where the loss is zero if we guess correctly or 1 if don't, but we know that'll lead to differentiability issues. We could try using the squared-error loss, but that results in a non-convex function that we cannot easily optimize. Instead, we use a special differentiable loss function is used known as the *cross-entropy loss*.
+
 $$
 \ell(y, p) = \begin{cases}
 -\log(p) & \text{ if y = 1} \\
 -\log(1-p) &\text{ otherwise}
-\end{cases} = 
+\end{cases} =
 -y\log(p)- (1 - y)\log(1 - p)
 $$
-Take a minute to think through what happens based on different predicted probabilities. How does the loss function manage to be both piecewise in a sense while remaining differentiable? 
+
+Take a minute to think through what happens based on different predicted probabilities. How does the loss function manage to be both piecewise in a sense while remaining differentiable?
 
 Sorry to disturb your pondering, but it looks like the mathematician is back... He asks glibly how's gradient descent treating you. You cautiously respond fine. Well, since you love derivatives so much, he says, why don't you find the gradient of this?
+
 $$
 L(\mathbf{w}, b) =
 \frac{1}{N}\sum_{i=0}^N
@@ -221,7 +229,9 @@ L(\mathbf{w}, b) =
 -y_i\log\left({1 \over 1 + e^{-\mathbf{w}^T\mathbf{x}_i-b}}\right)- (1 - y_i)\log\left(1 - {1 \over 1 + e^{-\mathbf{w}^T\mathbf{x}_i-b}}\right)
 \right]
 $$
+
 After cursing for a bit, you rewrite the function as $\ell(\sigma(f(w)))$ and start taking derivatives using the chain rule:
+
 $$
 l(\sigma) = -y\log(\sigma)- (1 - y)\log(1 - \sigma) \\
 \sigma(f) = \frac{1}{1+e^{-f}} \\
@@ -258,17 +268,17 @@ Logistic regression is now a breeze with gradient descent:
 def logreg(x, y, alpha=1e-4, max_iters=500):
     # We combine w and b to make the gradient simpler
     x = np.stack((x, np.ones(len(x))), axis=1)
-    
+
     def loss(w):
         p = 1 / (1 + np.exp(-np.dot(x, w)))
         return -np.sum(np.log(p*y + (1-p)*(1-y)))
 
     gradient = grad(loss)
-    
+
     w = np.array([0, 0])
-    while iters < max_iters:        
+    while iters < max_iters:
         w -= alpha*gradient(weights)
-        
+
     print(f"Parameters found after {iters} iterations: w={w[0]} b={w[1]}")
 ```
 
@@ -291,10 +301,13 @@ You recently discover your camera comes with a proximity sensor that gives you F
 <img src="images/multiclass_scatter.png" alt="multiclass_scatter" style="zoom:72%;" />
 
 This now gives us three classes to consider. How do we generalize from binary classification to multi-class classification (a.k.a. multinomial classification). First, let's consider the score function. Instead of obtaining a single probability, we'd like to obtain a vector of probabilities, so we'll upgrade or logistic function to its generalized form the *softmax function*:
+
 $$
 \mathbf{s}(\mathbf{z})_i = \frac{e^{\mathbf{z}_i}}{\sum_{k=1}^K e^{\mathbf{z}_k}} \text{ for } i = 1, \dotsc , K \text{ and } \mathbf z\in\R^K
 $$
+
 In the case of logistic regression, our $\mathbf{z}= \mathbf{w}^T \mathbf{x} + b$ :
+
 $$
 \mathbf{s}_i(\mathbf{x} ) = { \exp{\left(\mathbf{w}_{k'}^T\mathbf{x}+b_{k'} \right)} \over {\sum_{k=1}^K \exp{\left(\mathbf{w}_k^T\mathbf{x}+b_k \right)}}}
 \\
@@ -305,18 +318,23 @@ s_1 \\
 s_K
 \end{bmatrix} \text { where } s_i \in [0, 1] \text{ and } s_1 + ... + s_k = 1
 $$
+
 So given any point $x \in R^d$, a multi-class logistic-regression classifier will compute a vector $\mathbf{s}(\mathbf{x})$ of $K$ scores, one score per class. By design, the scores of a softmax add to one. In the case of multi-class logistic regression, these scores correspond to the probability that $\mathbf{x}$ is in each class.
 
 Now for the loss. Before considering how to generalize the cross-entropy loss, we should first consider how we want to represent a multiclass label. Earlier, we used a single scalar in $\{0, 1\}$ to represent an outcome, but now that we have three classes, should we use $\{0, 1, 2\}$? Take a moment to ponder what issues might arise. The biggest issue is that using 2 incorporates a complicating notion of magnitude. Instead, we use the *one-hot encoding* where we "turn on" the entry of zero vector which corresponds to the output class. For example, say we have three classes ($K=3$) and our output is label two ($y = 2$), the one-hot encoding would be $\mathbf{y} = [0, 1, 0]^T$.
 
 With the one-hot encoding of our label and our score vector, we can then use the generalized cross-entropy loss:
+
 $$
 \ell(\mathbf{y}, \mathbf{s}) = -\sum_{k=1}^Ky_k \log s_k \\
 $$
+
 Finally, we can take the average loss across the data set as the objective function which we'll minimize.
+
 $$
 L(b, \mathbf{w}) = \frac{1}{N}\sum_{n=1}^N\ell(\mathbf{y}_n; \mathbf{w}, b)
 $$
+
 Computing the Hessian you'll find that the resulting function is convex in the parameters $b$ and $\mathbf{w}$, so you can use gradient descent to minimize them. To compute this gradient, we'd turn to automatic differentiation, or better yet, we can turn to a software library.
 
 ### 1.8 ML Libraries
@@ -359,6 +377,7 @@ mean_squared_error(y_test, y_pred) # => 29.78224509230237
 Can we do any better?
 
 Now let's try to fit a model that makes use of *regularization*. Broadly, the idea here is to add another parameter to the loss function which will help the model generalize better to new data. In linear regression, for example, it might make sense to either eliminate weights or drive them close to zero if you suspect that some predictors in the data set may not correlate with the outcome. For example, you might use the $\ell_2$-norm of the weights as a penalty in your loss function:
+
 $$
 h_{\mathbf{w}}^{*}(\mathbf{x}) = \arg\min_{h_{\mathbf{w}}} L_D(h_{\mathbf{w}}) + \lambda||\mathbf{w}||^2_2=
 \arg\min_{h_{\mathbf{w}}}
@@ -366,6 +385,7 @@ h_{\mathbf{w}}^{*}(\mathbf{x}) = \arg\min_{h_{\mathbf{w}}} L_D(h_{\mathbf{w}}) +
 \frac{1}{N}\sum_{i=1}^{N}\ell(y_i, h(\mathbf{x}_i)) + \lambda\mathbf{w}^T\mathbf{w}
 \right\}
 $$
+
 This is also known as ridge regression. Notice, the $\lambda$ parameter has nothing do with our model parameters $\mathbf{w}$ and only controls how much we weight the norm of the weights in our penalty. For this reason, $\lambda$ is known as a hyperparameter. But how much should we penalize the weights in relation to the loss? How much should we regularize? What value for $\lambda$ do we pick? How would we set hyperparameters more generally? The answer is *cross-validation*. The procedure for K-fold cross-validation is described as follows. For each hyperparameter $\lambda$ of interest, perform the following:
 
 1. Shuffle the data set randomly.
@@ -391,11 +411,11 @@ for lambda_ in lambdas:
     for train_index, test_index in kf.split(X_train):
         X_tr, X_te = X_train[train_index], X_train[test_index]
         y_tr, y_te = y_train[train_index], y_train[test_index]
-        
+
         model = Ridge(alpha = lambda_)
         model.fit(X_tr, y_tr)
         y_pred = model.predict(X_test)
-        
+
         mses_for_lambda.append(mean_squared_error(y_test, y_pred))
     mses.append(np.mean(mses_for_lambda))
 
@@ -465,16 +485,18 @@ So far, all the problems we've dealt with involved linear functions. What happen
 
 <img src="images/circle.png" alt="circle" style="zoom:72%;" />
 
-There are a few tools we can reach for in this case. The first would be to perform *feature engineering* on the data set. In this case, we could imagine projecting the data onto a paraboloid in $\R^3$ turning our data set that's not linearly separable into one that is linearly separable. 
+There are a few tools we can reach for in this case. The first would be to perform *feature engineering* on the data set. In this case, we could imagine projecting the data onto a paraboloid in $\R^3$ turning our data set that's not linearly separable into one that is linearly separable.
 
 <img src="images/paraboloid.png" alt="paraboloid" style="zoom:72%;" />
 
 
 
 This is effectively fitting a logistic regression against a data matrix $[\mathbf{x_1}^2 ~~ \mathbf{x_2}^2 ~~ \mathbf{x_1} \mathbf{x_2} ~~ \mathbf{x_1} ~~ \mathbf{x_2} ~~ \mathbf{1}]$ through a process known as *kernalization*.
+
 $$
 \mathbf{w}^T\mathbf{x}+b \rightarrow \mathbf{w}^T\phi(\mathbf{x}) + b
 $$
+
 What if you have a more gnarly data set? There is a suite of other kernel-based methods such as Gaussian process and support vector machines. One of the nice features of Gaussian processes and support vector machines in that they are universal function approximators:  these methods are capable of approximating any measurable or continuous function up to the desired accuracy.
 
 Say you don't want to bother with mucking with a kernel  to handle your nonlinearity. There are other kernel free methods that have this process too such as K-nearest neighbors, random forests, and neural networks.
@@ -505,10 +527,12 @@ In 1958, psychologist Frank Rosenblatt publish a paper on a linear classifier ba
 Essentially, we take the dot product of the inputs with the weights and pass them through a unit-step activation function. Remind you of anything? Perhaps logistic regression? It turns out, logistic regression is the perceptron algorithm with the addition of the logistic function before the step activation. Just as before, the perceptron is parameterized by weights $\mathbf{w}$ and bias $b$.
 
 In order to make the algorithm more expressive, others later developed the idea of multilayered perceptrons with the hope that they could learn more expressive functions. Perhaps they could learn both the parameters $\mathbf{w}, b$ of the model and the feature transformation $\phi$.
+
 $$
 h(x) = \mathbf{w}^T\phi(\mathbf{x}) \\
 \phi(x) = \sigma\left(U\mathbf{x}+\mathbf{c} \right)
 $$
+
 Here there are three parameters to learn $\mathbf{w}$, $b$, and $A$. Here $\sigma$ is the *activation function* which can be any function that maps the output to a real value in the range [0, 1]. Historically, the activation function used to be the logistic. For computational convenience, however, the *rectified linear unit (ReLU)* is used since the gradients of the logistic at infinity go to zero, which helps to correct what's known as the vanishing gradient problem. The ReLU is simply $\sigma(x) = \max(0, x)$. At times, other sigmoidal (e.g. logistic, tanh) functions may be used in parts of the network, particularly at the output node. Other activation functions are used, and the best choice is still a moving target. See https://ml-cheatsheet.readthedocs.io/en/latest/activation_functions.html.
 
 <img src="images/mlp.svg" alt="MLP" />
@@ -516,17 +540,20 @@ Here there are three parameters to learn $\mathbf{w}$, $b$, and $A$. Here $\sigm
 
 
 Let's expand the neural network we've defined above to see what's going on inside:
+
 $$
 \begin{align}
 h(\mathbf{x}) &= \mathbf{w}^T\max(U\mathbf{x} + \mathbf{c}, 0) \\
 &= \sum_i w_i \max(\mathbf{u}_i^T\mathbf{x} + c_i)
 \end{align}
 $$
+
 where $\mathbf{u}_i$ is a row of $U$. Here, every perceptron or neuron feeds forward values that are transformed by weights $U$ and biases $\mathbf{c}$ of the following nodes. This is effectively the same thing as splicing together piecewise linear components where you get to decide how many components you wish to have. From here we get the universal function approximation theorem from neural networks. A feed-forward network with a single hidden layer of some finite depth can approximate continuos functions on $\R^n$. That network might need to grow exponentially wide to approximate your function, but it'll work!
 
 ### 2.2 Deep Learning - Hidden Layers
 
 So we have one way to increase the expressivity of a network: increasing the number of notes in a layer. A second method would be to nest these hidden layers. For the sake of simplicity, we'll rid ourselves of the first $\mathbf{w}^T$.
+
 $$
 \begin{align}
 h(x) &= \phi(\mathbf{x}) \\
@@ -544,9 +571,11 @@ This idea isn't new, it actually goes back to the time of Rosenblatt, but it was
 ### 2.3 Gradient Descent and Backpropagation
 
 Even though neural networks are highly non-convex (i.e. they have local minima everywhere), they're trained using a variant of gradient descent. As such, we take the gradient of the loss function through a procedure known as *backpropagation* of the weights. We define the training loss as the average loss over the training set.
+
 $$
 L_T(W)= \frac{1}{N}\sum_{n=1}^N \ell(\mathbf{y}_n, h_W(\mathbf{x}_n))
 $$
+
 Here, row $k$  of matrix $W$ is a vector containing the weights and biases for layer $k$. Since we have so many nested function calls, we rely heavily on the chain rule to compute the gradient. Thanks to automatic differentiation, we can let the computer do the dirty work for us.
 
 As we alluded to earlier, we update these weights using a variant of gradient descent known as *stochastic gradient descent (SGD).* SGD descent is, frankly, a stupid optimization method. Vanilla gradient descent computes the gradient of the loss using all the training data and takes one step at each iteration before updating (backpropagating) the weights. SGD on the otherhand, picks one data point from the data set computes the gradient of the loss and takes a step in that direction. This gives the descent the character of a drunk trying to find his way home, and yes, this means that once SGD reaches the door, he'll have trouble finding the keyhole. In fact, SGD bounces around the local minima quite a bit. These drawbacks are, however, features rather than bugs of SGD. Since neural networks result in highly nonconvex functions, SGD improves the ability for neural networks to generalize by avoiding avoid "sharp" minima.[^6]
@@ -583,7 +612,7 @@ def f(x,y):
     a1 = y/2
     z = -.3
     return a + r + a1 + z
-    
+
 fxy = np.zeros((N, N))
 for row in range(len(xx)):
     for col in range(len(xx[0])):
@@ -623,7 +652,7 @@ import random
 # We want to combine a sequence of layers
 model = keras.Sequential()
 # We're adding a single layer here, dense means the nodes are fully connected
-model.add(Dense(8, input_dim=2, activation='relu',)) 
+model.add(Dense(8, input_dim=2, activation='relu',))
 # We have a single output node with the default sigmoid activation
 model.add(Dense(1))
 # Since this is a regression problem we use the mean squared error, ADAM is our SGD variant of choice
@@ -665,8 +694,6 @@ ax.set_ylabel('y')
 ax.set_zlabel('z')
 ```
 
-
-
 <img src="images/results_droplet_example.png" style="zoom:67%;" />
 
 As to what the best parameters are for this particular instance, I won't tell you. Instead, I recommend that you play with the hyperparameters to see what's necessary to capture the peak in the middle. Note, you run near no risk of overfitting unless you try something heinous: the training and test data are very similar. Here are a few things you should try playing with to improve the network:
@@ -680,21 +707,17 @@ Here's an example of what your final prediction might look like:
 
 <img src="images/results_droplet_best.png" alt="droplet best" style="zoom: 67%;" />
 
-
-
 ### 2.5 Avoiding Overfitting
 
 Given the number of parameters you can have in a deep network, it's possible to achieve near zero training loss. Generally, it's useful to have some form of regularization. The simplest method is known as *weight decay* which penalizes the weights by adding $\lambda||\mathbf{w}||^2$ to the loss function which will keep the weights small. Another method is known as *early termination*. Here, training is stopped well before $L_T$ is minimized. A more informed approach is to stop when the validation error or the validation error rate stops declining. *Dropout[^10]* is another popular technique whereby multiple neural networks are trained in parallel and random nodes are removed from the network only during training. A final common method to avoid overfitting is through *ensembling*. Several neural networks are trained, then they all predict an output. The final result is the average output of the ensemble. Ensembling works in part due to the random initialization of weights during training.
 
-*Data augmentation* is another method to combat overfitting and even improve accuracy, but it's not a regularization method. In data augmentation, new training samples are created from the existing training samples. This is easy with images. Just take your original photo, rotate it, and blur it. Congratulations! You've got a new training sample. Any realistic perturbation of the input data seems to work. 
+*Data augmentation* is another method to combat overfitting and even improve accuracy, but it's not a regularization method. In data augmentation, new training samples are created from the existing training samples. This is easy with images. Just take your original photo, rotate it, and blur it. Congratulations! You've got a new training sample. Any realistic perturbation of the input data seems to work.
 
 ### 2.5 Convolutional Neural Networks
 
 Convolutional neural networks are primarily used in image tasks. First, let's motivate convolutional neural networks in the context of images. Say you aim to classify handwritten digits. Ideally, your classifier would be *translation invariant*: if the number shifts around, it should still be detected. How can you capture in your network?
 
 Say we have an image with black to white pixel values ranging from 0 to 255. One of the ways we might go about reducing the size of the image while preserving the locality would be to apply some sort of discrete filter across the image. Below (a) is an example of a discrete convolution of a 3 × 3 filter *kernel*  applied to a 4 × 4 feature. Note that *kernel* here takes on a different meaning than what we discussed earlier. If we were to string the pixels out into a series of vectors padded with zeros we could represent (a) as a series of dot products. The image (b) is the transpose of (a).[^7]
-
-
 
 <img src="images/convolution_operation.png" alt="Example of a discrete convolution (a) and equivalent transposed convolution operation (b) for a 3 × 3 filter kernel size applied to a 4 × 4 feature map. The active regions to compute the output value are shaded green. " style="zoom:67%;" />
 
